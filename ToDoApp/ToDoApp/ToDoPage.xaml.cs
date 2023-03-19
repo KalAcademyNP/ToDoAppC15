@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,14 +18,39 @@ namespace ToDoApp
             InitializeComponent();
         }
 
+        protected override void OnAppearing()
+        {
+            var todo = (ToDo)BindingContext;
+            if (todo != null && !string.IsNullOrEmpty(todo.FileName))
+            {
+                ToDoText.Text = File.ReadAllText(todo.FileName);
+            }
+        }
+
         private void OnSaveButtonClicked(object sender, EventArgs e)
         {
-            var todo = new ToDo();
+            var todo = (ToDo)BindingContext;
             todo.Text = ToDoText.Text;
+            if (string.IsNullOrEmpty(todo.FileName))
+            {
+                todo.FileName = Path.Combine(Environment.GetFolderPath(
+                    Environment.SpecialFolder.LocalApplicationData),
+                    $"{Path.GetRandomFileName()}.notes.txt");
+            }
+
+            File.WriteAllText(todo.FileName, todo.Text);
+            Navigation.PopModalAsync();
 
         }
         private void OnDeleteButtonClicked(object sender, EventArgs e)
         {
+            var todo = (ToDo)BindingContext;
+            if (File.Exists(todo.FileName))
+            {
+                File.Delete(todo.FileName);
+            }
+            ToDoText.Text = String.Empty;
+            Navigation.PopModalAsync();
 
         }
 
